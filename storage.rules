@@ -1,0 +1,44 @@
+rules_version = '2';
+
+service firebase.storage {
+  match /b/{bucket}/o {
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isVerifiedAdmin() {
+      return isSignedIn() && (
+        request.auth.token.admin == true ||
+        (request.auth.token.email_verified == true &&
+         (request.auth.token.email == 'd99312907@gmail.com' ||
+          request.auth.token.email == 'navjotpal11@gmail.com' ||
+          request.auth.token.email == 'navjotpaul11@gmail.com'))
+      );
+    }
+
+    function isValidImageUpload() {
+      return request.resource != null &&
+             request.resource.size <= 500 * 1024 * 1024 * 1024 &&
+             request.resource.contentType.matches('image/(jpeg|jpg|png|webp)');
+    }
+
+    // Wallpapers & Thumbnails: 500 GB Quota • Readable by all app users; valid image uploads allowed across all devices
+    match /wallpapers/{allPaths=**} {
+      allow read: if true;
+      allow create, update: if isValidImageUpload();
+      allow delete: if isVerifiedAdmin();
+    }
+
+    match /categories/{allPaths=**} {
+      allow read: if true;
+      allow create, update: if isValidImageUpload();
+      allow delete: if isVerifiedAdmin();
+    }
+
+    // Default deny
+    match /{allPaths=**} {
+      allow read, write: if false;
+    }
+  }
+}

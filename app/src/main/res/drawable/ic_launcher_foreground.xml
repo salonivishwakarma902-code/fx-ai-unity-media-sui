@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:aapt="http://schemas.android.com/aapt"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    <!-- Outer Liquid Glass Rounded Squircle Lens -->
+    <path
+        android:pathData="M34,22 L74,22 C80.6,22 86,27.4 86,34 L86,74 C86,80.6 80.6,86 74,86 L34,86 C27.4,86 22,80.6 22,74 L22,34 C22,27.4 27.4,22 34,22 Z">
+        <aapt:attr name="android:fillColor">
+            <gradient
+                android:startX="22"
+                android:startY="22"
+                android:endX="86"
+                android:endY="86"
+                android:type="linear">
+                <item android:offset="0.0" android:color="#4000F2FE" />
+                <item android:offset="0.5" android:color="#267C4DFF" />
+                <item android:offset="1.0" android:color="#40FF2E93" />
+            </gradient>
+        </aapt:attr>
+    </path>
+
+    <!-- Specular Top Rim Highlight -->
+    <path
+        android:fillColor="#99FFFFFF"
+        android:pathData="M34,23.5 L74,23.5 C79.8,23.5 84.5,28.2 84.5,34 L84.5,36 C82,29.5 76,26 68,26 L40,26 C32,26 26,29.5 23.5,36 L23.5,34 C23.5,28.2 28.2,23.5 34,23.5 Z" />
+
+    <!-- Pixora "P" Liquid Glass Prism Monogram -->
+    <path
+        android:pathData="M37,31 L58,31 C67.4,31 74,36.8 74,45.5 C74,54.2 67.4,60 58,60 L46,60 L46,77 L37,77 Z M46,39.5 L46,51.5 L57,51.5 C61.8,51.5 65,49.1 65,45.5 C65,41.9 61.8,39.5 57,39.5 Z">
+        <aapt:attr name="android:fillColor">
+            <gradient
+                android:startX="37"
+                android:startY="31"
+                android:endX="74"
+                android:endY="77"
+                android:type="linear">
+                <item android:offset="0.0" android:color="#FFFFFF" />
+                <item android:offset="0.45" android:color="#80F8FF" />
+                <item android:offset="1.0" android:color="#00E5FF" />
+            </gradient>
+        </aapt:attr>
+    </path>
+
+    <!-- Floating Liquid Droplet Accent & 4K Sparkle -->
+    <path
+        android:fillColor="#FF2E93"
+        android:pathData="M65,64 C68.9,64 72,67.1 72,71 C72,74.9 68.9,78 65,78 C61.1,78 58,74.9 58,71 C58,67.1 61.1,64 65,64 Z" />
+    <path
+        android:fillColor="#CCFFFFFF"
+        android:pathData="M63,67.5 C64.4,67.5 65.5,68.6 65.5,70 C65.5,71.4 64.4,72.5 63,72.5 C61.6,72.5 60.5,71.4 60.5,70 C60.5,68.6 61.6,67.5 63,67.5 Z" />
+</vector>

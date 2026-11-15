@@ -1,0 +1,6 @@
+{
+  "name": "Pixora Wallpapers",
+  "description": "Pixora Wallpapers — 4K & 8K Ultra HD wallpaper studio with cloud synchronization, live effects preview, and custom wallpaper tools.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

@@ -1,0 +1,378 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // 1. Global Safety Net (Default Deny)
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // 2. Hardened Global Helpers
+    function isValidId(id) {
+      return id is string && id.size() >= 1 && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    function incoming() {
+      return request.resource.data;
+    }
+
+    function existing() {
+      return resource.data;
+    }
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isVerifiedAdminEmail() {
+      return isSignedIn() &&
+             'email' in request.auth.token &&
+             request.auth.token.email == 'd99312907@gmail.com';
+    }
+
+    function isAdmin() {
+      return isSignedIn() && (
+        isVerifiedAdminEmail() ||
+        exists(/databases/$(database)/documents/admins/$(request.auth.uid))
+      );
+    }
+
+    // 3. Entity Validation Blueprints
+    function isValidUserProfile(data) {
+      return data.userId is string && data.userId.size() >= 1 && data.userId.size() <= 128 &&
+             data.email is string && data.email.size() >= 3 && data.email.size() <= 200 &&
+             data.displayName is string && data.displayName.size() >= 1 && data.displayName.size() <= 100 &&
+             (!('photoUrl' in data) || data.photoUrl == null || (data.photoUrl is string && data.photoUrl.size() <= 2000)) &&
+             data.role is string && (data.role == 'user' || data.role == 'admin') &&
+             data.status is string && (data.status == 'active' || data.status == 'disabled') &&
+             data.downloadCount is int && data.downloadCount >= 0 &&
+             data.favoriteCount is int && data.favoriteCount >= 0 &&
+             data.themePreference is string && (data.themePreference == 'dark' || data.themePreference == 'light' || data.themePreference == 'system') &&
+             (!('isPremium' in data) || data.isPremium is bool) &&
+             (!('premiumUtr' in data) || (data.premiumUtr is string && data.premiumUtr.size() <= 64)) &&
+             (!('premiumPlan' in data) || (data.premiumPlan is string && data.premiumPlan.size() <= 80)) &&
+             (!('premiumPurchasedAt' in data) || data.premiumPurchasedAt == null || (data.premiumPurchasedAt is timestamp && data.premiumPurchasedAt <= request.time)) &&
+             data.createdAt is timestamp && data.createdAt <= request.time &&
+             data.updatedAt is timestamp && data.updatedAt <= request.time;
+    }
+
+    function isValidPremiumPurchase(data) {
+      return data.userId is string && isValidId(data.userId) &&
+             data.userEmail is string && data.userEmail.size() >= 3 && data.userEmail.size() <= 200 &&
+             data.userDisplayName is string && data.userDisplayName.size() >= 1 && data.userDisplayName.size() <= 100 &&
+             data.utrReference is string && data.utrReference.size() >= 6 && data.utrReference.size() <= 64 &&
+             data.planName is string && data.planName.size() >= 1 && data.planName.size() <= 80 &&
+             data.amountInr is int && data.amountInr >= 0 && data.amountInr <= 1000000 &&
+             data.status is string && (data.status == 'active' || data.status == 'verified' || data.status == 'revoked') &&
+             data.createdAt is timestamp && data.createdAt <= request.time &&
+             data.updatedAt is timestamp && data.updatedAt <= request.time;
+    }
+
+    function isValidWallpaper(data) {
+      return data.title is string && data.title.size() >= 1 && data.title.size() <= 120 &&
+             data.description is string && data.description.size() <= 1000 &&
+             data.category is string && data.category.size() >= 1 && data.category.size() <= 60 &&
+             data.tags is list && data.tags.size() <= 10 && (data.tags.size() == 0 || (data.tags[0] is string && data.tags[0].size() <= 40)) &&
+             data.resolution is string && data.resolution.size() >= 1 && data.resolution.size() <= 30 &&
+             data.fileSize is string && data.fileSize.size() >= 1 && data.fileSize.size() <= 30 &&
+             data.fileSizeBytes is int && data.fileSizeBytes >= 0 && data.fileSizeBytes <= 2199023255552 &&
+             data.mimeType is string && (data.mimeType == 'image/jpeg' || data.mimeType == 'image/jpg' || data.mimeType == 'image/png' || data.mimeType == 'image/webp') &&
+             data.imageUrl is string && data.imageUrl.size() >= 1 && data.imageUrl.size() <= 900000 &&
+             data.thumbnailUrl is string && data.thumbnailUrl.size() >= 1 && data.thumbnailUrl.size() <= 900000 &&
+             data.storagePath is string && data.storagePath.size() <= 300 &&
+             data.status is string && (data.status == 'published' || data.status == 'draft') &&
+             data.isFeatured is bool &&
+             data.isTrending is bool &&
+             data.downloadCount is int && data.downloadCount >= 0 &&
+             data.favoriteCount is int && data.favoriteCount >= 0 &&
+             (!('viewCount' in data) || (data.viewCount is int && data.viewCount >= 0)) &&
+             data.uploadedBy is string && data.uploadedBy.size() >= 1 && data.uploadedBy.size() <= 128 &&
+             (!('createdAt' in data) || (data.createdAt is timestamp && data.createdAt <= request.time)) &&
+             data.updatedAt is timestamp && data.updatedAt <= request.time;
+    }
+
+    function isValidCategory(data) {
+      return data.name is string && data.name.size() >= 1 && data.name.size() <= 60 &&
+             data.description is string && data.description.size() <= 300 &&
+             data.thumbnailUrl is string && data.thumbnailUrl.size() >= 1 && data.thumbnailUrl.size() <= 900000 &&
+             data.order is int && data.order >= 0 && data.order <= 1000 &&
+             data.enabled is bool &&
+             data.wallpaperCount is int && data.wallpaperCount >= 0 &&
+             data.accentHex is string && data.accentHex.size() >= 4 && data.accentHex.size() <= 12 &&
+             (!('createdAt' in data) || (data.createdAt is timestamp && data.createdAt <= request.time)) &&
+             data.updatedAt is timestamp && data.updatedAt <= request.time;
+    }
+
+    function isValidFavorite(data) {
+      return data.userId is string && data.userId == request.auth.uid &&
+             isValidId(data.wallpaperId) &&
+             data.wallpaperTitle is string && data.wallpaperTitle.size() >= 1 && data.wallpaperTitle.size() <= 120 &&
+             data.wallpaperThumbnailUrl is string && data.wallpaperThumbnailUrl.size() >= 1 && data.wallpaperThumbnailUrl.size() <= 900000 &&
+             data.wallpaperCategory is string && data.wallpaperCategory.size() >= 1 && data.wallpaperCategory.size() <= 60 &&
+             data.wallpaperResolution is string && data.wallpaperResolution.size() >= 1 && data.wallpaperResolution.size() <= 30 &&
+             data.createdAt is timestamp && data.createdAt <= request.time;
+    }
+
+    function isValidDownloadRecord(data) {
+      return data.userId is string && data.userId == request.auth.uid &&
+             isValidId(data.wallpaperId) &&
+             data.wallpaperTitle is string && data.wallpaperTitle.size() >= 1 && data.wallpaperTitle.size() <= 120 &&
+             data.wallpaperThumbnailUrl is string && data.wallpaperThumbnailUrl.size() >= 1 && data.wallpaperThumbnailUrl.size() <= 900000 &&
+             data.wallpaperResolution is string && data.wallpaperResolution.size() >= 1 && data.wallpaperResolution.size() <= 30 &&
+             data.fileSize is string && data.fileSize.size() >= 1 && data.fileSize.size() <= 30 &&
+             data.createdAt is timestamp && data.createdAt <= request.time;
+    }
+
+    function isValidAppSettings(data) {
+      return data.appName is string && data.appName.size() >= 1 && data.appName.size() <= 60 &&
+             data.logoText is string && data.logoText.size() >= 1 && data.logoText.size() <= 30 &&
+             data.maintenanceMode is bool &&
+             data.maxUploadSizeMb is int && data.maxUploadSizeMb >= 1 && data.maxUploadSizeMb <= 2048000 &&
+             data.announcementText is string && data.announcementText.size() <= 300 &&
+             data.announcementEnabled is bool &&
+             data.heroBannerTitle is string && data.heroBannerTitle.size() >= 1 && data.heroBannerTitle.size() <= 120 &&
+             data.heroBannerSubtitle is string && data.heroBannerSubtitle.size() >= 1 && data.heroBannerSubtitle.size() <= 240 &&
+             data.heroBannerImageUrl is string && data.heroBannerImageUrl.size() >= 1 && data.heroBannerImageUrl.size() <= 900000 &&
+             data.showFeaturedSection is bool &&
+             data.showTrendingSection is bool &&
+             data.showCategoriesSection is bool &&
+             data.showNewArrivalsSection is bool &&
+             data.visibility is string && data.visibility == 'public' &&
+             (!('createdAt' in data) || (data.createdAt is timestamp && data.createdAt <= request.time)) &&
+             data.updatedAt is timestamp && data.updatedAt <= request.time;
+    }
+
+    function isValidAdminEntry(data) {
+      return data.uid is string && isValidId(data.uid) &&
+             data.email is string && data.email.size() >= 3 && data.email.size() <= 200 &&
+             data.createdAt is timestamp && data.createdAt <= request.time;
+    }
+
+    // 4. Collection Rules
+
+    // USERS (PII Protected: only owner or admin can read)
+    match /users/{userId} {
+      allow get: if isSignedIn() && isValidId(userId) && (request.auth.uid == userId || isAdmin());
+      allow list: if isSignedIn() && (existing().userId == request.auth.uid || isAdmin());
+
+      allow create: if isSignedIn() &&
+                       isValidId(userId) &&
+                       request.auth.uid == userId &&
+                       incoming().userId == request.auth.uid &&
+                       incoming().keys().hasAll([
+                         'userId', 'email', 'displayName', 'role', 'status',
+                         'downloadCount', 'favoriteCount', 'themePreference',
+                         'createdAt', 'updatedAt'
+                       ]) &&
+                       incoming().keys().hasOnly([
+                         'userId', 'email', 'displayName', 'photoUrl', 'role', 'status',
+                         'downloadCount', 'favoriteCount', 'themePreference',
+                         'isPremium', 'premiumUtr', 'premiumPlan', 'premiumPurchasedAt',
+                         'createdAt', 'updatedAt'
+                       ]) &&
+                       isValidUserProfile(incoming()) &&
+                       incoming().status == 'active' &&
+                       (incoming().role == 'user' || isAdmin());
+
+      allow update: if isSignedIn() &&
+                       isValidId(userId) &&
+                       isValidUserProfile(incoming()) &&
+                       incoming().userId == existing().userId &&
+                       incoming().email == existing().email &&
+                       incoming().createdAt == existing().createdAt && (
+                         // Action 1: Owner updates own profile/counters/premium status (cannot alter role or status)
+                         (request.auth.uid == userId &&
+                          incoming().role == existing().role &&
+                          incoming().status == existing().status &&
+                          incoming().diff(existing()).affectedKeys().hasOnly([
+                            'displayName', 'photoUrl', 'downloadCount', 'favoriteCount',
+                            'themePreference', 'isPremium', 'premiumUtr', 'premiumPlan',
+                            'premiumPurchasedAt', 'updatedAt'
+                          ])) ||
+                         // Action 2: Verified Admin manages user account status/role/premium
+                         (isAdmin() &&
+                          incoming().diff(existing()).affectedKeys().hasOnly([
+                            'displayName', 'photoUrl', 'role', 'status',
+                            'downloadCount', 'favoriteCount', 'themePreference',
+                            'isPremium', 'premiumUtr', 'premiumPlan', 'premiumPurchasedAt',
+                            'updatedAt'
+                          ]))
+                       );
+
+      allow delete: if isSignedIn() && isValidId(userId) && (request.auth.uid == userId || isAdmin());
+    }
+
+    // PREMIUM PURCHASES (PII Protected: owner or admin can read, owner creates, admin verifies/revokes)
+    match /premiumPurchases/{purchaseId} {
+      allow get: if isSignedIn() && isValidId(purchaseId) && (existing().userId == request.auth.uid || isAdmin());
+      allow list: if isSignedIn() && (existing().userId == request.auth.uid || isAdmin());
+
+      allow create: if isSignedIn() &&
+                       isValidId(purchaseId) &&
+                       incoming().userId == request.auth.uid &&
+                       incoming().status == 'active' &&
+                       incoming().keys().hasAll([
+                         'userId', 'userEmail', 'userDisplayName', 'utrReference',
+                         'planName', 'amountInr', 'status', 'createdAt', 'updatedAt'
+                       ]) &&
+                       incoming().keys().hasOnly([
+                         'userId', 'userEmail', 'userDisplayName', 'utrReference',
+                         'planName', 'amountInr', 'status', 'createdAt', 'updatedAt'
+                       ]) &&
+                       isValidPremiumPurchase(incoming());
+
+      allow update: if isAdmin() &&
+                       isValidId(purchaseId) &&
+                       isValidPremiumPurchase(incoming()) &&
+                       incoming().userId == existing().userId &&
+                       incoming().createdAt == existing().createdAt &&
+                       incoming().diff(existing()).affectedKeys().hasOnly(['status', 'planName', 'updatedAt']);
+
+      allow delete: if isAdmin() && isValidId(purchaseId);
+    }
+
+    // WALLPAPERS (Readable on all devices so every downloaded APK displays all wallpapers)
+    match /wallpapers/{wallpaperId} {
+      allow get: if isValidId(wallpaperId);
+      allow list: if true;
+
+      allow create: if isValidId(wallpaperId) &&
+                       incoming().keys().hasAll([
+                         'title', 'description', 'category', 'tags', 'resolution',
+                         'fileSize', 'fileSizeBytes', 'mimeType', 'imageUrl', 'thumbnailUrl',
+                         'storagePath', 'status', 'isFeatured', 'isTrending',
+                         'downloadCount', 'favoriteCount', 'uploadedBy', 'createdAt', 'updatedAt'
+                       ]) &&
+                       incoming().keys().hasOnly([
+                         'title', 'description', 'category', 'tags', 'resolution',
+                         'fileSize', 'fileSizeBytes', 'mimeType', 'imageUrl', 'thumbnailUrl',
+                         'storagePath', 'status', 'isFeatured', 'isTrending',
+                         'downloadCount', 'favoriteCount', 'viewCount', 'uploadedBy', 'createdAt', 'updatedAt'
+                       ]) &&
+                       isValidWallpaper(incoming());
+
+      allow update: if isValidId(wallpaperId) && (
+                       isValidWallpaper(incoming()) ||
+                       request.resource.data.diff(resource.data).affectedKeys().hasOnly(['downloadCount', 'favoriteCount', 'viewCount', 'updatedAt'])
+                     );
+
+      allow delete: if isValidId(wallpaperId);
+    }
+
+    // CATEGORIES (Readable on all devices)
+    match /categories/{categoryId} {
+      allow get: if isValidId(categoryId);
+      allow list: if true;
+
+      allow create: if isValidId(categoryId) &&
+                       incoming().keys().hasAll([
+                         'name', 'description', 'thumbnailUrl', 'order',
+                         'enabled', 'wallpaperCount', 'accentHex', 'createdAt', 'updatedAt'
+                       ]) &&
+                       incoming().keys().hasOnly([
+                         'name', 'description', 'thumbnailUrl', 'order',
+                         'enabled', 'wallpaperCount', 'accentHex', 'createdAt', 'updatedAt'
+                       ]) &&
+                       isValidCategory(incoming());
+
+      allow update: if isValidId(categoryId) && (
+                       isValidCategory(incoming()) ||
+                       request.resource.data.diff(resource.data).affectedKeys().hasOnly(['wallpaperCount', 'enabled', 'order', 'updatedAt'])
+                     );
+
+      allow delete: if isValidId(categoryId);
+    }
+
+    // FAVORITES (User-owned records)
+    match /favorites/{favoriteId} {
+      allow get: if isSignedIn() && isValidId(favoriteId) && (existing().userId == request.auth.uid || isAdmin());
+      allow list: if isSignedIn() && (existing().userId == request.auth.uid || isAdmin());
+
+      allow create: if isSignedIn() &&
+                       isValidId(favoriteId) &&
+                       incoming().keys().hasAll([
+                         'userId', 'wallpaperId', 'wallpaperTitle',
+                         'wallpaperThumbnailUrl', 'wallpaperCategory',
+                         'wallpaperResolution', 'createdAt'
+                       ]) &&
+                       incoming().keys().hasOnly([
+                         'userId', 'wallpaperId', 'wallpaperTitle',
+                         'wallpaperThumbnailUrl', 'wallpaperCategory',
+                         'wallpaperResolution', 'createdAt'
+                       ]) &&
+                       isValidFavorite(incoming()) &&
+                       exists(/databases/$(database)/documents/wallpapers/$(incoming().wallpaperId));
+
+      allow update: if false;
+
+      allow delete: if isSignedIn() && isValidId(favoriteId) && (existing().userId == request.auth.uid || isAdmin());
+    }
+
+    // DOWNLOADS (User-owned download history)
+    match /downloads/{downloadId} {
+      allow get: if isSignedIn() && isValidId(downloadId) && (existing().userId == request.auth.uid || isAdmin());
+      allow list: if isSignedIn() && (existing().userId == request.auth.uid || isAdmin());
+
+      allow create: if isSignedIn() &&
+                       isValidId(downloadId) &&
+                       incoming().keys().hasAll([
+                         'userId', 'wallpaperId', 'wallpaperTitle',
+                         'wallpaperThumbnailUrl', 'wallpaperResolution',
+                         'fileSize', 'createdAt'
+                       ]) &&
+                       incoming().keys().hasOnly([
+                         'userId', 'wallpaperId', 'wallpaperTitle',
+                         'wallpaperThumbnailUrl', 'wallpaperResolution',
+                         'fileSize', 'createdAt'
+                       ]) &&
+                       isValidDownloadRecord(incoming()) &&
+                       exists(/databases/$(database)/documents/wallpapers/$(incoming().wallpaperId));
+
+      allow update: if false;
+
+      allow delete: if isSignedIn() && isValidId(downloadId) && (existing().userId == request.auth.uid || isAdmin());
+    }
+
+    // APP SETTINGS (Global homepage and app configuration readable on all devices)
+    match /appSettings/{settingId} {
+      allow get: if isValidId(settingId);
+      allow list: if true;
+
+      allow create: if isValidId(settingId) &&
+                       incoming().keys().hasAll([
+                         'appName', 'logoText', 'maintenanceMode', 'maxUploadSizeMb',
+                         'announcementText', 'announcementEnabled', 'heroBannerTitle',
+                         'heroBannerSubtitle', 'heroBannerImageUrl', 'showFeaturedSection',
+                         'showTrendingSection', 'showCategoriesSection', 'showNewArrivalsSection',
+                         'visibility', 'createdAt', 'updatedAt'
+                       ]) &&
+                       isValidAppSettings(incoming());
+
+      allow update: if isValidId(settingId) && (
+                       isValidAppSettings(incoming()) ||
+                       request.resource.data.diff(resource.data).affectedKeys().hasOnly(['appName', 'logoText', 'maintenanceMode', 'announcementText', 'announcementEnabled', 'heroBannerTitle', 'heroBannerSubtitle', 'heroBannerImageUrl', 'showFeaturedSection', 'showTrendingSection', 'showCategoriesSection', 'showNewArrivalsSection', 'updatedAt'])
+                     );
+
+      allow delete: if isValidId(settingId);
+    }
+
+    // ADMINS (Trusted Administrator Registry)
+    match /admins/{adminId} {
+      allow get: if isSignedIn() && isValidId(adminId) && (request.auth.uid == adminId || isAdmin());
+      allow list: if isAdmin();
+
+      allow create: if isSignedIn() &&
+                       isValidId(adminId) &&
+                       incoming().uid == adminId &&
+                       incoming().keys().hasAll(['uid', 'email', 'createdAt']) &&
+                       incoming().keys().hasOnly(['uid', 'email', 'createdAt']) &&
+                       isValidAdminEntry(incoming()) &&
+                       isAdmin();
+
+      allow update: if false;
+
+      allow delete: if isSignedIn() && isValidId(adminId) && isAdmin();
+    }
+  }
+}

@@ -1,0 +1,9 @@
+<resources>
+    <string name="app_name">Pixora Wallpapers</string>
+    <string name="tagline_liquid_glass">4K &amp; 8K Ultra HD Wallpaper Studio</string>
+    <string name="sign_in_with_google">Sign in with Google</string>
+    <string name="admin_panel_title">Pixora Wallpapers Admin Studio</string>
+    <string name="user_panel_title">Pixora Wallpapers 4K</string>
+    <string name="download_original">Download Original 4K</string>
+    <string name="apply_wallpaper">Apply 4K Wallpaper</string>
+</resources>

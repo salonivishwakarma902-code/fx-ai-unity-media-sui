@@ -1,0 +1,470 @@
+{
+  "entities": {
+    "UserProfile": {
+      "title": "UserProfile",
+      "description": "Registered WALLX user account, role, status, and activity counters.",
+      "type": "object",
+      "properties": {
+        "userId": {
+          "type": "string",
+          "description": "Firebase Auth UID matching the document ID."
+        },
+        "email": {
+          "type": "string",
+          "format": "email",
+          "description": "User email address (PII protected)."
+        },
+        "displayName": {
+          "type": "string",
+          "description": "User display name."
+        },
+        "photoUrl": {
+          "type": "string",
+          "description": "User avatar URL."
+        },
+        "role": {
+          "type": "string",
+          "enum": ["user", "admin"],
+          "description": "System role ('user' or 'admin'). Users cannot self-assign 'admin'."
+        },
+        "status": {
+          "type": "string",
+          "enum": ["active", "disabled"],
+          "description": "Account status ('active' or 'disabled'). Only admins can modify."
+        },
+        "downloadCount": {
+          "type": "integer",
+          "description": "Total wallpapers downloaded by this user."
+        },
+        "favoriteCount": {
+          "type": "integer",
+          "description": "Total wallpapers favorited by this user."
+        },
+        "themePreference": {
+          "type": "string",
+          "enum": ["dark", "light", "system"],
+          "description": "Preferred Liquid Glass theme mode."
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server timestamp of registration (FieldValue.serverTimestamp())."
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server timestamp of last update (FieldValue.serverTimestamp())."
+        }
+      },
+      "required": [
+        "userId",
+        "email",
+        "displayName",
+        "role",
+        "status",
+        "downloadCount",
+        "favoriteCount",
+        "themePreference",
+        "createdAt",
+        "updatedAt"
+      ]
+    },
+    "Wallpaper": {
+      "title": "Wallpaper",
+      "description": "Wallpaper metadata, Storage/image URLs, category, tags, resolution, and statistics.",
+      "type": "object",
+      "properties": {
+        "title": {
+          "type": "string",
+          "description": "Wallpaper title."
+        },
+        "description": {
+          "type": "string",
+          "description": "Wallpaper description."
+        },
+        "category": {
+          "type": "string",
+          "description": "Category name (AMOLED, Abstract, Anime, Nature, Cars, Supercars, Gaming, Space, Minimal, Aesthetic, Architecture, Dark, 4K, 8K)."
+        },
+        "tags": {
+          "type": "array",
+          "description": "Up to 10 searchable string tags."
+        },
+        "resolution": {
+          "type": "string",
+          "description": "Image resolution string (e.g., 3840x2160 4K)."
+        },
+        "fileSize": {
+          "type": "string",
+          "description": "Human-readable file size (e.g., 2.8 MB)."
+        },
+        "fileSizeBytes": {
+          "type": "integer",
+          "description": "File size in bytes (max 52428800 bytes / 50 MB)."
+        },
+        "mimeType": {
+          "type": "string",
+          "enum": ["image/jpeg", "image/jpg", "image/png", "image/webp"],
+          "description": "Validated image MIME type."
+        },
+        "imageUrl": {
+          "type": "string",
+          "description": "Full quality wallpaper URL or encoded image payload."
+        },
+        "thumbnailUrl": {
+          "type": "string",
+          "description": "Preview thumbnail URL or encoded image payload."
+        },
+        "storagePath": {
+          "type": "string",
+          "description": "Firebase Storage object path."
+        },
+        "status": {
+          "type": "string",
+          "enum": ["published", "draft"],
+          "description": "Publication visibility state."
+        },
+        "isFeatured": {
+          "type": "boolean",
+          "description": "Whether featured on the home banner/featured rail."
+        },
+        "isTrending": {
+          "type": "boolean",
+          "description": "Whether highlighted in the trending section."
+        },
+        "downloadCount": {
+          "type": "integer",
+          "description": "Atomic download counter."
+        },
+        "favoriteCount": {
+          "type": "integer",
+          "description": "Atomic favorite counter."
+        },
+        "uploadedBy": {
+          "type": "string",
+          "description": "Admin UID who uploaded the wallpaper."
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server timestamp of creation (FieldValue.serverTimestamp())."
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server timestamp of last update (FieldValue.serverTimestamp())."
+        }
+      },
+      "required": [
+        "title",
+        "description",
+        "category",
+        "tags",
+        "resolution",
+        "fileSize",
+        "fileSizeBytes",
+        "mimeType",
+        "imageUrl",
+        "thumbnailUrl",
+        "storagePath",
+        "status",
+        "isFeatured",
+        "isTrending",
+        "downloadCount",
+        "favoriteCount",
+        "uploadedBy",
+        "createdAt",
+        "updatedAt"
+      ]
+    },
+    "Category": {
+      "title": "Category",
+      "description": "Wallpaper category metadata, order, thumbnail, and enable/disable state.",
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string",
+          "description": "Category display name."
+        },
+        "description": {
+          "type": "string",
+          "description": "Category subtitle/description."
+        },
+        "thumbnailUrl": {
+          "type": "string",
+          "description": "Category cover image URL."
+        },
+        "order": {
+          "type": "integer",
+          "description": "Display sort order index."
+        },
+        "enabled": {
+          "type": "boolean",
+          "description": "Whether category is visible in the User Panel."
+        },
+        "wallpaperCount": {
+          "type": "integer",
+          "description": "Count of wallpapers in this category."
+        },
+        "accentHex": {
+          "type": "string",
+          "description": "Liquid Glass glow accent color hex."
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server timestamp of creation (FieldValue.serverTimestamp())."
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server timestamp of update (FieldValue.serverTimestamp())."
+        }
+      },
+      "required": [
+        "name",
+        "description",
+        "thumbnailUrl",
+        "order",
+        "enabled",
+        "wallpaperCount",
+        "accentHex",
+        "createdAt",
+        "updatedAt"
+      ]
+    },
+    "Favorite": {
+      "title": "Favorite",
+      "description": "User-specific favorite wallpaper record synchronized in real time.",
+      "type": "object",
+      "properties": {
+        "userId": {
+          "type": "string",
+          "description": "Authenticated user UID."
+        },
+        "wallpaperId": {
+          "type": "string",
+          "description": "Target wallpaper document ID."
+        },
+        "wallpaperTitle": {
+          "type": "string",
+          "description": "Denormalized wallpaper title."
+        },
+        "wallpaperThumbnailUrl": {
+          "type": "string",
+          "description": "Denormalized wallpaper thumbnail URL."
+        },
+        "wallpaperCategory": {
+          "type": "string",
+          "description": "Denormalized wallpaper category."
+        },
+        "wallpaperResolution": {
+          "type": "string",
+          "description": "Denormalized wallpaper resolution."
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server timestamp when favorited (FieldValue.serverTimestamp())."
+        }
+      },
+      "required": [
+        "userId",
+        "wallpaperId",
+        "wallpaperTitle",
+        "wallpaperThumbnailUrl",
+        "wallpaperCategory",
+        "wallpaperResolution",
+        "createdAt"
+      ]
+    },
+    "DownloadRecord": {
+      "title": "DownloadRecord",
+      "description": "User wallpaper download history record.",
+      "type": "object",
+      "properties": {
+        "userId": {
+          "type": "string",
+          "description": "Authenticated user UID."
+        },
+        "wallpaperId": {
+          "type": "string",
+          "description": "Downloaded wallpaper document ID."
+        },
+        "wallpaperTitle": {
+          "type": "string",
+          "description": "Denormalized wallpaper title."
+        },
+        "wallpaperThumbnailUrl": {
+          "type": "string",
+          "description": "Denormalized wallpaper thumbnail URL."
+        },
+        "wallpaperResolution": {
+          "type": "string",
+          "description": "Denormalized wallpaper resolution."
+        },
+        "fileSize": {
+          "type": "string",
+          "description": "Denormalized file size."
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server timestamp when downloaded (FieldValue.serverTimestamp())."
+        }
+      },
+      "required": [
+        "userId",
+        "wallpaperId",
+        "wallpaperTitle",
+        "wallpaperThumbnailUrl",
+        "wallpaperResolution",
+        "fileSize",
+        "createdAt"
+      ]
+    },
+    "AppSettings": {
+      "title": "AppSettings",
+      "description": "Global WALLX configuration, homepage management, banners, and maintenance state.",
+      "type": "object",
+      "properties": {
+        "appName": {
+          "type": "string",
+          "description": "Application display name."
+        },
+        "logoText": {
+          "type": "string",
+          "description": "Header brand badge text."
+        },
+        "maintenanceMode": {
+          "type": "boolean",
+          "description": "Whether maintenance mode is active for non-admin users."
+        },
+        "maxUploadSizeMb": {
+          "type": "integer",
+          "description": "Maximum upload size in MB (1 to 50)."
+        },
+        "announcementText": {
+          "type": "string",
+          "description": "Homepage announcement banner text."
+        },
+        "announcementEnabled": {
+          "type": "boolean",
+          "description": "Whether announcement banner is shown."
+        },
+        "heroBannerTitle": {
+          "type": "string",
+          "description": "Hero banner headline."
+        },
+        "heroBannerSubtitle": {
+          "type": "string",
+          "description": "Hero banner subtitle."
+        },
+        "heroBannerImageUrl": {
+          "type": "string",
+          "description": "Hero banner background image URL."
+        },
+        "showFeaturedSection": {
+          "type": "boolean",
+          "description": "Toggle Featured section on homepage."
+        },
+        "showTrendingSection": {
+          "type": "boolean",
+          "description": "Toggle Trending section on homepage."
+        },
+        "showCategoriesSection": {
+          "type": "boolean",
+          "description": "Toggle Categories rail on homepage."
+        },
+        "showNewArrivalsSection": {
+          "type": "boolean",
+          "description": "Toggle New Arrivals section on homepage."
+        },
+        "visibility": {
+          "type": "string",
+          "enum": ["public"],
+          "description": "Visibility scope ('public') for query alignment."
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server timestamp of creation."
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server timestamp of last update."
+        }
+      },
+      "required": [
+        "appName",
+        "logoText",
+        "maintenanceMode",
+        "maxUploadSizeMb",
+        "announcementText",
+        "announcementEnabled",
+        "heroBannerTitle",
+        "heroBannerSubtitle",
+        "heroBannerImageUrl",
+        "showFeaturedSection",
+        "showTrendingSection",
+        "showCategoriesSection",
+        "showNewArrivalsSection",
+        "visibility",
+        "createdAt",
+        "updatedAt"
+      ]
+    },
+    "AdminEntry": {
+      "title": "AdminEntry",
+      "description": "Trusted administrator registry entry.",
+      "type": "object",
+      "properties": {
+        "uid": {
+          "type": "string",
+          "description": "Admin user UID."
+        },
+        "email": {
+          "type": "string",
+          "description": "Admin email address."
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server timestamp."
+        }
+      },
+      "required": ["uid", "email", "createdAt"]
+    }
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": { "$ref": "#/entities/UserProfile" },
+      "description": "User accounts and profile metadata."
+    },
+    "/wallpapers/{wallpaperId}": {
+      "schema": { "$ref": "#/entities/Wallpaper" },
+      "description": "All wallpapers in the WALLX catalog."
+    },
+    "/categories/{categoryId}": {
+      "schema": { "$ref": "#/entities/Category" },
+      "description": "Wallpaper categories and ordering."
+    },
+    "/favorites/{favoriteId}": {
+      "schema": { "$ref": "#/entities/Favorite" },
+      "description": "User-scoped favorite wallpaper records."
+    },
+    "/downloads/{downloadId}": {
+      "schema": { "$ref": "#/entities/DownloadRecord" },
+      "description": "User-scoped wallpaper download records."
+    },
+    "/appSettings/{settingId}": {
+      "schema": { "$ref": "#/entities/AppSettings" },
+      "description": "Global application settings and homepage configuration."
+    },
+    "/admins/{adminId}": {
+      "schema": { "$ref": "#/entities/AdminEntry" },
+      "description": "Trusted administrator lookup collection."
+    }
+  }
+}
